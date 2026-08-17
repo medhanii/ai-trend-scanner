@@ -4,7 +4,6 @@ import os, json
 
 app = Flask(__name__)
 DATA_FILE = os.environ.get('DATA_FILE', 'signals.json')
-WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET', '')
 
 
 def load_signals():
@@ -27,9 +26,6 @@ def health():
 
 @app.post('/webhook')
 def webhook():
-    if WEBHOOK_SECRET and request.args.get('key') != WEBHOOK_SECRET:
-        return {'ok': False, 'error': 'unauthorized'}, 401
-
     payload = request.get_json(silent=True)
     if payload is None:
         raw = request.get_data(as_text=True)
@@ -66,7 +62,7 @@ def dashboard():
       const list=document.getElementById('list'); list.innerHTML='';
       if(!data.length){list.innerHTML='<div class="card muted">No TradingView signals received yet.</div>';return}
       data.forEach(s=>{
-        const dir=(s.direction||s.side||'').toString().toUpperCase();
+        const dir=(s.signal||s.direction||s.side||'').toString().toUpperCase();
         const cls=dir.includes('LONG')?'green':dir.includes('SHORT')?'red':'';
         const div=document.createElement('div'); div.className='card';
         div.innerHTML=`<div class="row"><div><b>${s.symbol||s.ticker||'Market'}</b><br><small>${s.timeframe||s.interval||''}</small></div><div class="${cls}"><b>${dir||s.alert||s.message||'Signal'}</b></div><div><small>Setup</small><div class="score">${s.setup_score??s.setupScore??'-'}</div></div><div><small>Trend</small><div class="score">${s.trend_score??s.trendScore??'-'}</div></div><div><small>Received</small><br><small>${s.received_at||''}</small></div></div>`;
